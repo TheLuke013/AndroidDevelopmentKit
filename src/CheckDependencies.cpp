@@ -38,7 +38,6 @@ bool CreateNewDirectory(const std::string& directoryPath)
 {
 	if (CreateDirectory(directoryPath.c_str(), nullptr) || GetLastError() == ERROR_ALREADY_EXISTS)
 	{
-		std::cout << "pasta criada" << std::endl;
 		return true;
 	}
 	else
@@ -48,9 +47,26 @@ bool CreateNewDirectory(const std::string& directoryPath)
 	}
 }
 
+//funcao auxiliar que executa um script batch
+bool RunScript(const std::string& scriptPath)
+{
+	//executa o script batch do caminho especificado
+	int result = system(scriptPath.c_str());
+	//verifica se a execucao foi bem sucedida
+	if (result == 0)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 bool CheckDependencies()
 {
 	/*verificacao dos scripts para garantir que tudo seja executado com sucesso*/
+	std::cout << "Checking scripts folder..." << std::endl;
 
 	//verifica se a pasta de scripts existe e se é um diretorio
 	if (!DirectoryExists(SCRIPTS_FOLDER))
@@ -74,10 +90,49 @@ bool CheckDependencies()
 	/*verificacao das dependencias do programa*/
 
 	//verifica se a pasta de dependencias existe
+	std::cout << "Checking dependencies folder..." << std::endl;
 	if (!DirectoryExists(DEPENDENCIES_FOLDER))
 	{
 		if (!CreateNewDirectory(DEPENDENCIES_FOLDER))
 		{
+			return false;
+		}
+	}
+
+	//verifica se o cmake esta instalado e se o diretorio nao esta vazio
+	std::cout << "Checking if CMake is installed" << std::endl;
+	if (!DirectoryExists(CMAKE_FOLDER))
+	{
+		if (!RunScript(INSTALL_CMAKE_SCRIPT_PATH))
+		{
+			std::cout << "Error: Unable to install CMake" << std::endl;
+			return false;
+		}
+	}
+	else if (IsDirectoryEmpty(CMAKE_FOLDER))
+	{
+		if (!RunScript(INSTALL_CMAKE_SCRIPT_PATH))
+		{
+			std::cout << "Error: Unable to install CMake" << std::endl;
+			return false;
+		}
+	}
+
+	//verifica se o jdk esta instalado e se o diretorio nao esta vazio
+	std::cout << "Checking if JDK is installed" << std::endl;
+	if (!DirectoryExists(JDK_FOLDER))
+	{
+		if (!RunScript(INSTALL_JDK_SCRIPT_PATH))
+		{
+			std::cout << "Error: Unable to install OpenJDK" << std::endl;
+			return false;
+		}
+	}
+	else if (IsDirectoryEmpty(JDK_FOLDER))
+	{
+		if (!RunScript(INSTALL_JDK_SCRIPT_PATH))
+		{
+			std::cout << "Error: Unable to install OpenJDK" << std::endl;
 			return false;
 		}
 	}
