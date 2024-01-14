@@ -63,6 +63,31 @@ bool RunScript(const std::string& scriptPath)
 	}
 }
 
+//se determinada dependencia nao estiver diponivel instale-a
+bool CheckDependencie(const std::string& name, const std::string& scriptFolder, const std::string& scriptInstallFile)
+{
+	std::cout << "Checking if " + name + " is installed" << std::endl;
+	if (!DirectoryExists(scriptFolder))
+	{
+		if (!RunScript(scriptInstallFile))
+		{
+			std::cout << "Error: Unable to install " + name << std::endl;
+			return false;
+		}
+	}
+	else if (IsDirectoryEmpty(scriptFolder))
+	{
+		if (!RunScript(scriptInstallFile))
+		{
+			std::cout << "Error: Unable to install " + name << std::endl;
+			return false;
+		}
+	}
+
+	return true;
+}
+
+//verifica todas dependencias necessarias
 bool CheckDependencies()
 {
 	/*verificacao dos scripts para garantir que tudo seja executado com sucesso*/
@@ -82,11 +107,6 @@ bool CheckDependencies()
 		return false;
 	}
 
-
-
-
-
-
 	/*verificacao das dependencias do programa*/
 
 	//verifica se a pasta de dependencias existe
@@ -99,43 +119,13 @@ bool CheckDependencies()
 		}
 	}
 
-	//verifica se o cmake esta instalado e se o diretorio nao esta vazio
-	std::cout << "Checking if CMake is installed" << std::endl;
-	if (!DirectoryExists(CMAKE_FOLDER))
-	{
-		if (!RunScript(INSTALL_CMAKE_SCRIPT_PATH))
-		{
-			std::cout << "Error: Unable to install CMake" << std::endl;
-			return false;
-		}
-	}
-	else if (IsDirectoryEmpty(CMAKE_FOLDER))
-	{
-		if (!RunScript(INSTALL_CMAKE_SCRIPT_PATH))
-		{
-			std::cout << "Error: Unable to install CMake" << std::endl;
-			return false;
-		}
-	}
+	//verifica se o android sdk esta instalado e se o diretorio nao esta vazio
+	CheckDependencie("Android SDK", ANDROID_SDK_FOLDER, INSTALL_ANDROID_SDK_SCRIPT_PATH);
 
-	//verifica se o jdk esta instalado e se o diretorio nao esta vazio
-	std::cout << "Checking if JDK is installed" << std::endl;
-	if (!DirectoryExists(JDK_FOLDER))
-	{
-		if (!RunScript(INSTALL_JDK_SCRIPT_PATH))
-		{
-			std::cout << "Error: Unable to install OpenJDK" << std::endl;
-			return false;
-		}
-	}
-	else if (IsDirectoryEmpty(JDK_FOLDER))
-	{
-		if (!RunScript(INSTALL_JDK_SCRIPT_PATH))
-		{
-			std::cout << "Error: Unable to install OpenJDK" << std::endl;
-			return false;
-		}
-	}
+	//verifica se o command line tools esta instalado e se o diretorio nao esta vazio
+	CheckDependencie("Command Line Tools", COMMAND_LINE_TOOLS_FOLDER, INSTALL_COMMAND_LINE_TOOLS_SCRIPT_PATH);
+
+	RunScript("..\\scripts\\sdk_dependencies.bat");
 
 	return true;
 }
