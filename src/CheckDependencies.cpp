@@ -1,48 +1,32 @@
 #include "CheckDependencies.h"
 
+#include <filesystem>
+
 //funcao auxiliar que verifica se um diretorio existe
 bool DirectoryExists(const std::string& directoryPath)
 {
-	DWORD attributes = GetFileAttributesA(directoryPath.c_str());
-	return (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY));
+	std::filesystem::path path(directoryPath);
+	return std::filesystem::exists(path) && std::filesystem::is_directory(path);
 }
 
 //funcao auxiliar que verifica se um diretorio esta vazio
 bool IsDirectoryEmpty(const std::string& directoryPath)
 {
-	WIN32_FIND_DATA findFileData;
-	HANDLE hFind = FindFirstFile((directoryPath + "\\*").c_str(), &findFileData);
-
-	if (hFind == INVALID_HANDLE_VALUE)
-	{
-		return true;
-	}
-
-	do
-	{
-		if (strcmp(findFileData.cFileName, ".") != 0 &&
-			strcmp(findFileData.cFileName, "..") != 0)
-		{
-			FindClose(hFind);
-			return false;
-		}
-	} while (FindNextFile(hFind, &findFileData) != 0);
-
-	FindClose(hFind);
-
-	return true;
+	std::filesystem::path path(directoryPath);
+	return std::filesystem::is_empty(path);
 }
 
 //funcao auxiliar que cria um novo diretorio
 bool CreateNewDirectory(const std::string& directoryPath)
 {
-	if (CreateDirectory(directoryPath.c_str(), nullptr) || GetLastError() == ERROR_ALREADY_EXISTS)
+	try
 	{
+		std::filesystem::create_directory(directoryPath);
 		return true;
 	}
-	else
+	catch (const std::exception& e)
 	{
-		std::cerr << "Error creating directory. Error code: " << GetLastError() << std::endl;
+		std::cerr << "Error creating directory: " << e.what() << std::endl;
 		return false;
 	}
 }
